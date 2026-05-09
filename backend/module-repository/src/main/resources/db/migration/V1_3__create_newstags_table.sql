@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS newstags (
+    news_id BIGINT NOT NULL,
+    tag_Id BIGINT NOT NULL,
+
+    CONSTRAINT fk_tag_news FOREIGN KEY (news_Id) REFERENCES news(id) ON DELETE CASCADE,
+    CONSTRAINT fk_news_tag FOREIGN KEY (tag_Id) REFERENCES tags(id) ON DELETE CASCADE
+);

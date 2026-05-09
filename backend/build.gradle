@@ -1,0 +1,150 @@
+plugins {
+    id "org.sonarqube" version "7.3.0.8198"
+    id 'jacoco'
+
+}
+
+sonar {
+    properties {
+        property "sonar.projectKey", "Fwalt237_FwaltNews"
+        property "sonar.organization", "fwalt237"
+        property "sonar.host.url", "https://sonarcloud.io"
+        property "sonar.exclusions", ["**/dto/**", "**/model/**", "**/config/**", "**/security/**", "**/versioning/**",
+                                      "**/*Exception*.java", "**/Main.java"].join(",")
+        property "sonar.coverage.jacoco.xmlReportPaths", "${rootProject.projectDir}/module-repository/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "${rootProject.projectDir}/module-service/build/reports/jacoco/test/jacocoTestReport.xml," +
+                "${rootProject.projectDir}/module-web/build/reports/jacoco/test/jacocoTestReport.xml"
+    }
+}
+
+wrapper {
+    gradleVersion = gradlewVersion
+}
+
+subprojects{
+
+    apply plugin: 'java'
+    apply plugin: 'jacoco'
+    apply plugin: 'checkstyle'
+
+
+    group = 'com.mjc.school'
+    version = '1.0-SNAPSHOT'
+
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+
+    repositories {
+        mavenCentral()
+        maven { url 'https://repo.spring.io/milestone'}
+        maven { url 'https://repo.spring.io/snapshot' }
+    }
+
+    jacoco {
+        toolVersion = "0.8.11"
+    }
+
+    jacocoTestReport {
+        reports {
+            xml.required = true
+            html.required = true
+        }
+    }
+
+    plugins.withId('org.springframework.boot') {
+        bootJar {
+            enabled = false
+        }
+    }
+
+    jar {
+        enabled = true
+    }
+
+    tasks.withType(Checkstyle) {
+        enabled = false
+    }
+
+
+    dependencies {
+        testImplementation platform('org.junit:junit-bom:5.10.0')
+        testImplementation 'org.junit.jupiter:junit-jupiter'
+        testImplementation "com.tngtech.archunit:archunit-junit5:$archUnitVersion"
+        testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+
+        implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+        testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+        testImplementation 'io.rest-assured:rest-assured'
+        testImplementation 'io.rest-assured:json-path'
+        testImplementation 'io.rest-assured:xml-path'
+
+        implementation 'org.springframework.boot:spring-boot-starter-hateoas'
+
+        implementation "org.springdoc:springdoc-openapi-starter-webmvc-ui:$springDocVersion"
+
+        implementation 'org.springframework.boot:spring-boot-starter-security'
+
+        implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'
+        implementation 'org.springframework.boot:spring-boot-starter-oauth2-resource-server'
+
+        implementation "io.jsonwebtoken:jjwt-api:$jwtVersion"
+        runtimeOnly "io.jsonwebtoken:jjwt-impl:$jwtVersion"
+        runtimeOnly "io.jsonwebtoken:jjwt-jackson:$jwtVersion"
+
+        testImplementation 'org.springframework.security:spring-security-test'
+
+        annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+
+        implementation 'org.springframework.boot:spring-boot-starter-cache'
+        implementation "com.github.ben-manes.caffeine:caffeine:$caffeineVersion"
+        testImplementation 'org.springframework.boot:spring-boot-starter-cache'
+
+        implementation platform("org.springframework.ai:spring-ai-bom:$aiBOMVersion")
+        implementation "com.pgvector:pgvector:$pgvectorVersion"
+        implementation 'org.springframework.ai:spring-ai-starter-model-google-genai'
+
+        testImplementation("org.testcontainers:testcontainers-bom:$testContainersVersion")
+        testImplementation 'org.springframework.boot:spring-boot-testcontainers'
+        testImplementation 'org.testcontainers:junit-jupiter'
+        testImplementation 'org.testcontainers:postgresql'
+
+        implementation "com.bucket4j:bucket4j_jdk17-core:$bucket4jVersion"
+        implementation "com.bucket4j:bucket4j-caffeine:$bucket4jCaffeineVersion"
+
+        implementation 'org.springframework.boot:spring-boot-starter-actuator'
+        implementation 'io.micrometer:micrometer-registry-prometheus'
+    }
+
+    configurations {
+        testImplementation {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+    }
+
+    test {
+        useJUnitPlatform()
+        finalizedBy jacocoTestReport
+    }
+
+    check {
+        dependsOn = [
+                test,
+                checkstyleMain,
+        ]
+    }
+
+    tasks.withType(JavaCompile) {
+        options.compilerArgs = [
+                "-Xlint:deprecation",
+                "-Xlint:unchecked",
+                "-parameters",
+        ]
+    }
+}
+
+tasks.named('sonar').configure {
+    dependsOn subprojects.test
+}

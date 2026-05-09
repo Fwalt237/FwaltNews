@@ -1,0 +1,4 @@
+ALTER TABLE news ADD COLUMN IF NOT EXISTS image_url TEXT;
+ALTER TABLE news ADD COLUMN IF NOT EXISTS source_icon TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_news_title ON news(title);
