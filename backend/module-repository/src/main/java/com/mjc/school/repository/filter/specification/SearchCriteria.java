@@ -11,10 +11,10 @@ public class SearchCriteria implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    final private SearchOperation predicate;
-    final private String field;
-    final private SearchOperation operation;
-    final private Object value;
+    private final  SearchOperation predicate;
+    private final  String field;
+    private final  SearchOperation operation;
+    private final  Object value;
 
     public SearchCriteria(final SearchOperation predicate, final String field, final SearchOperation operation, final Object value) {
         this.predicate = predicate;

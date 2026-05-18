@@ -16,9 +16,10 @@ import java.util.List;
 @Primary
 @Mapper(componentModel = "spring", nullValueCheckStrategy = NullValueCheckStrategy.ALWAYS)
 public abstract class CommentMapper {
-
+    
     @Autowired
     protected NewsRepository newsRepository;
+
     public abstract List<CommentsDtoResponse> modelListToDtoList(List<Comment> modelList);
 
     @Mapping(target = "newsId", expression = "java(model.getNews().getId())")

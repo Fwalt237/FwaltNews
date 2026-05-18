@@ -3,6 +3,7 @@ package com.mjc.school.service.aiservice;
 import com.mjc.school.service.config.properties.GeminiProperties;
 import com.mjc.school.service.aiservice.dto.EmbeddingRequest;
 import com.mjc.school.service.aiservice.dto.EmbeddingResponse;
+import com.mjc.school.service.exceptions.AiIntegrationException;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,11 +52,11 @@ public class MyEmbeddingClient {
                 log.info("Successfully retrieved embedding. Dimensions: {}", VECTOR_LENGTH);
                 return vector;
             }else {
-                throw new RuntimeException("Gemini API Error: " + response.getStatusCode());
+                throw new AiIntegrationException("Gemini API Error: " + response.getStatusCode());
             }
         }catch(Exception e){
             log.error("Failed to fetch embedding: {}", e.getMessage());
-            throw new RuntimeException("Embedding generation failed", e);
+            throw new AiIntegrationException("Embedding generation failed: " + e.getMessage());
         }
     }
 }

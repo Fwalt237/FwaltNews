@@ -51,7 +51,7 @@ public class TagService implements
             key = "'page-' + #searchFilterRequest.page + '-' + #searchFilterRequest.pageSize")
     public PageDtoResponse<TagDtoResponse> readAll(@Valid ResourceSearchFilterRequestDTO searchFilterRequest) {
         final ResourceSearchFilter searchFilter = tagSearchFilterMapper.map(searchFilterRequest);
-        final Specification<Tag> specification = getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
+        final Specification<Tag> specification = this.<Tag>getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
         final Pageable pageable = createPageable(searchFilter);
         final Page<Tag> page = tagRepository.findAll(specification,pageable);
         final List<TagDtoResponse> modelDtoList = mapper.modelListToDtoList(page.getContent());

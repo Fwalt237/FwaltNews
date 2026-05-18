@@ -12,7 +12,7 @@ import org.springframework.util.CollectionUtils;
 
 public abstract class BaseSearchFilterMapper<T> {
 
-    public final static String SORT_AND_FILTER_DELIMITER = ":";
+    public static final String SORT_AND_FILTER_DELIMITER = ":";
 
     public abstract List<Sorting> getDefaultSorting();
 

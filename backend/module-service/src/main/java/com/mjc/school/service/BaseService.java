@@ -19,8 +19,8 @@ public interface BaseService<C, R, G, S, U> {
 
     void deleteById(G id);
 
-    default EntitySearchSpecification getEntitySearchSpecification(final ResourceSearchFilter searchFilter) {
-        return new EntitySearchSpecification.Builder()
+    default <T> EntitySearchSpecification<T> getEntitySearchSpecification(final ResourceSearchFilter searchFilter) {
+        return new EntitySearchSpecification.Builder<T>()
                 .pagination(searchFilter.getPagination())
                 .sorting(searchFilter.getOrder())
                 .searchFilterSpecification(searchFilter.getSearchCriteriaList()).build();

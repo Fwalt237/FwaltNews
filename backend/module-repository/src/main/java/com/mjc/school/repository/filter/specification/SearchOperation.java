@@ -32,9 +32,9 @@ public enum SearchOperation {
       return operationName;
    }
 
-    public final static List<SearchOperation> PREDICATES = Arrays.asList(AND_PREDICATE, OR_PREDICATE);
+    public static final List<SearchOperation> PREDICATES = Arrays.asList(AND_PREDICATE, OR_PREDICATE);
 
-    public final static List<SearchOperation> SEARCH_OPERATIONS = Arrays.asList(GREATER_THAN,
+    public static final List<SearchOperation> SEARCH_OPERATIONS = Arrays.asList(GREATER_THAN,
             LESS_THAN,
             GREATER_THAN_EQUAL,
             LESS_THAN_EQUAL,
@@ -47,7 +47,7 @@ public enum SearchOperation {
             NOT_IN,
             BETWEEN);
 
-    public final static List<SearchOperation> LIKE_CRITERIA_OPERATIONS = Arrays.asList(LIKE,
+    public static final List<SearchOperation> LIKE_CRITERIA_OPERATIONS = Arrays.asList(LIKE,
             LIKE_START,
             LIKE_END);
 

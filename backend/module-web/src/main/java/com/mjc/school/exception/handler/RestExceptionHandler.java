@@ -1,5 +1,6 @@
 package com.mjc.school.exception.handler;
 
+import com.mjc.school.service.exceptions.AiIntegrationException;
 import com.mjc.school.service.exceptions.NotFoundException;
 import com.mjc.school.service.exceptions.ResourceConflictServiceException;
 import com.mjc.school.service.exceptions.ServiceException;
@@ -16,10 +17,10 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 
 
 import static com.mjc.school.service.exceptions.ServiceErrorCode.ACCESS_DENIED;
+import static com.mjc.school.service.exceptions.ServiceErrorCode.AI_EMBEDDING_FAILED;
 import static com.mjc.school.service.exceptions.ServiceErrorCode.API_VERSION_NOT_SUPPORTED;
 import static com.mjc.school.service.exceptions.ServiceErrorCode.AUTHENTICATION_FAILED;
 import static com.mjc.school.service.exceptions.ServiceErrorCode.BAD_CREDENTIALS;
-import static com.mjc.school.service.exceptions.ServiceErrorCode.RATE_LIMIT_EXCEEDED;
 import static com.mjc.school.service.exceptions.ServiceErrorCode.RESOURCE_NOT_FOUND;
 import static com.mjc.school.service.exceptions.ServiceErrorCode.UNEXPECTED_ERROR;
 import static com.mjc.school.service.exceptions.ServiceErrorCode.USERNAME_DOES_NOT_EXIST;
@@ -75,15 +76,16 @@ public class RestExceptionHandler extends ResponseEntityExceptionHandler {
                 ae.getMessage(), HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(value = AiIntegrationException.class)
+    protected ResponseEntity<ErrorResponse> handleAiIntegrationException(AiIntegrationException aie) {
+        return buildErrorResponse(AI_EMBEDDING_FAILED.getErrorCode(), AI_EMBEDDING_FAILED.getMessage(),
+                aie.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(value = Exception.class)
     protected ResponseEntity<ErrorResponse> handleUnexpectedException(Exception exc) {
         return buildErrorResponse(UNEXPECTED_ERROR.getErrorCode(), UNEXPECTED_ERROR.getMessage(),
                 exc.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
-    }
-    @ExceptionHandler(value = RateLimitExceededException.class)
-    protected ResponseEntity<ErrorResponse> handleRateLimit(RateLimitExceededException rle){
-        return buildErrorResponse(RATE_LIMIT_EXCEEDED.getErrorCode(), RATE_LIMIT_EXCEEDED.getMessage(),
-                rle.getMessage(), HttpStatus.TOO_MANY_REQUESTS);
     }
 
     private ResponseEntity<ErrorResponse> buildErrorResponse(String code, String errorMessage,

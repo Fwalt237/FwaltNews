@@ -1,6 +1,5 @@
 package com.mjc.school.controller.impl;
 
-import com.mjc.school.aicontroller.RateLimitingFilter;
 import com.mjc.school.service.fetcher.NewsFetcherService;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -8,10 +7,7 @@ import io.restassured.filter.log.RequestLoggingFilter;
 import io.restassured.filter.log.ResponseLoggingFilter;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
-import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,8 +25,6 @@ import org.springframework.test.jdbc.JdbcTestUtils;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import static io.restassured.RestAssured.given;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.doAnswer;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -76,9 +70,6 @@ public abstract class BaseControllerTest {
     protected OAuth2AuthorizedClientService authorizedClientService;
 
     @MockBean
-    protected RateLimitingFilter rateLimitingFilter;
-
-    @MockBean
     protected NewsFetcherService newsFetcherService;
 
     protected RequestSpecification requestSpecification;
@@ -89,14 +80,6 @@ public abstract class BaseControllerTest {
 
     @BeforeEach
     void setUp() throws ServletException, IOException {
-
-        doAnswer(invocation -> {
-            HttpServletRequest request = invocation.getArgument(0);
-            HttpServletResponse response = invocation.getArgument(1);
-            FilterChain chain = invocation.getArgument(2);
-            chain.doFilter(request, response);
-            return null;
-        }).when(rateLimitingFilter).doFilter(any(), any(), any());
 
         JdbcTestUtils.deleteFromTables(jdbcTemplate,"chat_messages", "news_embeddings", "newstags","comments","news", "authors", "tags","user_roles","users");
 

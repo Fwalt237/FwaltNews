@@ -66,7 +66,7 @@ public class NewsService implements BaseService<CreateNewsDtoRequest, NewsDtoRes
             + "+ #searchFilterRequest.sortByAndOrder + '-' + #searchFilterRequest.searchFilter")
     public PageDtoResponse<NewsDtoResponse> readAll(@Valid ResourceSearchFilterRequestDTO searchFilterRequest) {
         final ResourceSearchFilter searchFilter = newsSearchFilterMapper.map(searchFilterRequest);
-        final Specification<News> specification = getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
+        final Specification<News> specification = this.<News>getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
         final Pageable pageable = createPageable(searchFilter);
         final Page<News> page = newsRepository.findAll(specification,pageable);
         final List<NewsDtoResponse> modelDtoList = mapper.modelListToDtoList(page.getContent());
@@ -160,12 +160,10 @@ public class NewsService implements BaseService<CreateNewsDtoRequest, NewsDtoRes
     }
 
     private void createNonExistentAuthor(String authorName) {
-        if (authorName != null && !authorName.isBlank()) {
-            if (authorRepository.findByName(authorName).isEmpty()) {
-                Author author = new Author();
-                author.setName(authorName);
-                authorRepository.save(author);
-            }
+        if (authorName != null && !authorName.isBlank() && authorRepository.findByName(authorName).isEmpty()) {
+            Author author = new Author();
+            author.setName(authorName);
+            authorRepository.save(author);
         }
     }
 

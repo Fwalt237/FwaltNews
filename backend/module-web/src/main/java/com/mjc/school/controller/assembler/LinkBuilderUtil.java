@@ -1,6 +1,8 @@
 package com.mjc.school.controller.assembler;
 
 import com.mjc.school.versioning.ApiVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,6 +12,8 @@ import java.lang.reflect.Method;
 
 @Component
 public class LinkBuilderUtil{
+
+    private static final Logger log = LoggerFactory.getLogger(LinkBuilderUtil.class);
 
     public String buildLink(Class<?> controllerClass, String methodName, Object... pathVariables){
         String baseUrl = ServletUriComponentsBuilder.fromCurrentContextPath().build().toUriString();
@@ -45,7 +49,7 @@ public class LinkBuilderUtil{
     }
 
     public String buildCollectionLink(Class<?> controllerClass){
-        return buildLink(controllerClass,null);
+        return buildLink(controllerClass, (Object) null);
     }
 
     public String buildCollectionLinkForMethod(Class<?> controllerClass,String methodName){
@@ -75,7 +79,7 @@ public class LinkBuilderUtil{
                 }
             }
         }catch(Exception e){
-            System.err.println("Warning: Could not extract API from request: "+e.getMessage());
+            log.warn("Warning: Could not extract API from request: {} ", e.getMessage());
         }
         return "1";
     }
@@ -98,9 +102,9 @@ public class LinkBuilderUtil{
                 return String.valueOf(classVersion.value());
             }
         }catch(Exception e){
-            System.err.println("Warning: Could not extract API version from "+
-                    controllerClass.getName()+(methodName!=null ? "."+methodName : "")+
-                    ": "+e.getMessage());
+            log.error("Could not extract API version from {}{}: {}", controllerClass.getSimpleName(),
+                    (methodName != null ? "." + methodName : ""),
+                    e.getMessage());
         }
         return null;
     }

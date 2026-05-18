@@ -65,7 +65,7 @@ public class CommentService
             key = "'page-' + #searchFilterRequest.page + '-' + #searchFilterRequest.pageSize")
     public PageDtoResponse<CommentsDtoResponse> readAll(@Valid ResourceSearchFilterRequestDTO searchFilterRequest) {
         final ResourceSearchFilter searchFilter = commentsSearchFilterMapper.map(searchFilterRequest);
-        final Specification<Comment> specification = getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
+        final Specification<Comment> specification = this.<Comment>getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
         final Pageable pageable = createPageable(searchFilter);
         final Page<Comment> page = commentRepository.findAll(specification,pageable);
         final List<CommentsDtoResponse> modelDtoList = mapper.modelListToDtoList(page.getContent());

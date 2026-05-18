@@ -22,7 +22,7 @@ public enum ServiceErrorCode {
     ACCESS_DENIED("000023","Access Denied: you don't have the necessary permissions."),
     USERNAME_DOES_NOT_EXIST("00006","Username not found"),
     AUTHENTICATION_FAILED("000024","Authentication failed"),
-    RATE_LIMIT_EXCEEDED("000429", "Rate limit exceeded. Try again in a minute.")
+    AI_EMBEDDING_FAILED("000503","AI Assistant is having trouble processing your request")
     ;
 
     private final String errorCode;

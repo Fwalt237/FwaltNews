@@ -46,7 +46,7 @@ public class NewsFetcherService {
         this.httpClient=HttpClient.newHttpClient();
     }
 
-    @Scheduled(fixedRate=43200000)
+    @Scheduled(fixedRate = 86400000)
     public void fetchLatestNews(){
         try{
             List<NewsDataItem> items = callApi();

@@ -8,11 +8,11 @@ import java.util.List;
 
 public class ResourceSearchFilter {
 
-    private Pagination pagination;
+    private final Pagination pagination;
 
-    private List<Sorting> sorting;
+    private final List<Sorting> sorting;
 
-    private List<SearchCriteria> searchCriteriaList;
+    private final List<SearchCriteria> searchCriteriaList;
 
     public ResourceSearchFilter(final Pagination pagination, final List<Sorting> sorting,
                                 final List<SearchCriteria> searchCriteriaList) {

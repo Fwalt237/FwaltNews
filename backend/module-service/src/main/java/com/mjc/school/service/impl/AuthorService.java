@@ -52,7 +52,7 @@ public class AuthorService
             key = "'page-' + #searchFilterRequest.page + '-' + #searchFilterRequest.pageSize")
     public PageDtoResponse<AuthorDtoResponse> readAll(@Valid ResourceSearchFilterRequestDTO searchFilterRequest) {
         final ResourceSearchFilter searchFilter = authorSearchFilterMapper.map(searchFilterRequest);
-        final Specification<Author> specification = getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
+        final Specification<Author> specification = this.<Author>getEntitySearchSpecification(searchFilter).getSearchFilterSpecification();
         final Pageable pageable = createPageable(searchFilter);
         final Page<Author> page = authorRepository.findAll(specification,pageable);
         final List<AuthorDtoResponse> modelDtoList = mapper.modelListToDtoList(page.getContent());
