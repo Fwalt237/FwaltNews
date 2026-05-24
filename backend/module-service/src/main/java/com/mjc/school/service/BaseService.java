@@ -9,40 +9,43 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
 public interface BaseService<C, R, G, S, U> {
-    PageDtoResponse<R> readAll(S searchFilterRequest);
+  PageDtoResponse<R> readAll(S searchFilterRequest);
 
-    R readById(G id);
+  R readById(G id);
 
-    R create(C createRequest);
+  R create(C createRequest);
 
-    R update(G id, U updateRequest);
+  R update(G id, U updateRequest);
 
-    void deleteById(G id);
+  void deleteById(G id);
 
-    default <T> EntitySearchSpecification<T> getEntitySearchSpecification(final ResourceSearchFilter searchFilter) {
-        return new EntitySearchSpecification.Builder<T>()
-                .pagination(searchFilter.getPagination())
-                .sorting(searchFilter.getOrder())
-                .searchFilterSpecification(searchFilter.getSearchCriteriaList()).build();
+  default <T> EntitySearchSpecification<T> getEntitySearchSpecification(
+      final ResourceSearchFilter searchFilter) {
+    return new EntitySearchSpecification.Builder<T>()
+        .pagination(searchFilter.getPagination())
+        .sorting(searchFilter.getOrder())
+        .searchFilterSpecification(searchFilter.getSearchCriteriaList())
+        .build();
+  }
+
+  default Pageable createPageable(ResourceSearchFilter searchFilter) {
+    int page = searchFilter.getPagination().page() - 1;
+    int size = searchFilter.getPagination().pageSize();
+
+    Sort sort = Sort.unsorted();
+
+    if (searchFilter.getOrder() != null && !searchFilter.getOrder().isEmpty()) {
+      Sort.Order[] orders =
+          searchFilter.getOrder().stream()
+              .map(
+                  sorting -> {
+                    Sort.Direction direction =
+                        sorting.order() == SortOrder.ASC ? Sort.Direction.ASC : Sort.Direction.DESC;
+                    return new Sort.Order(direction, sorting.field());
+                  })
+              .toArray(Sort.Order[]::new);
+      sort = Sort.by(orders);
     }
-
-    default Pageable createPageable(ResourceSearchFilter searchFilter){
-        int page = searchFilter.getPagination().page() -1;
-        int size = searchFilter.getPagination().pageSize();
-
-        Sort sort = Sort.unsorted();
-
-        if(searchFilter.getOrder() !=null && !searchFilter.getOrder().isEmpty()){
-            Sort.Order[] orders = searchFilter.getOrder().stream()
-                    .map(sorting ->{
-                        Sort.Direction direction = sorting.order() == SortOrder.ASC
-                                ? Sort.Direction.ASC
-                                : Sort.Direction.DESC;
-                        return new Sort.Order(direction,sorting.field());
-                    }).toArray(Sort.Order[]::new);
-            sort = Sort.by(orders);
-        }
-        return PageRequest.of(page,size,sort);
-    }
-
+    return PageRequest.of(page, size, sort);
+  }
 }

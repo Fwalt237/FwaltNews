@@ -1,14 +1,13 @@
 plugins {
     id 'java-library'
-    id 'org.flywaydb.flyway'
-    id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
+    alias(libs.plugins.flyway)
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.spring.dependency.management)
 }
 
 dependencies {
-
-    implementation 'org.flywaydb:flyway-core'
-    implementation 'org.flywaydb:flyway-database-postgresql'
-    implementation 'org.postgresql:postgresql'
-    implementation "org.hibernate.orm:hibernate-vector:$hibernateVectorVersion"
+    implementation libs.flyway.core
+    implementation libs.flyway.database.postgresql
+    implementation libs.postgresql
+    implementation libs.hibernate.vector
 }

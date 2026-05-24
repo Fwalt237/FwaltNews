@@ -1,0 +1,112 @@
+[versions]
+
+sonarqube = "7.3.0.8198"
+spotless = "6.25.0"
+flyway-plugin = "10.10.0"
+spring-boot = "3.3.0"
+spring-dependency-management = "1.1.5"
+
+mapstruct = "1.5.5.Final"
+aspectj = "1.9.22"
+jackson = "2.17.1"
+archunit = "1.2.1"
+jwt = "0.12.5"
+jsoup = "1.21.2"
+slf4j = "2.0.13"
+caffeine = "3.1.8"
+pgvector = "0.1.6"
+ai-bom = "1.1.5"
+testcontainers = "1.20.4"
+springdoc = "2.5.0"
+hibernate-vector = "6.5.0.Final"
+junit-bom = "5.10.0"
+jacoco = "0.8.11"
+
+[libraries]
+
+mapstruct = { group = "org.mapstruct", name = "mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { group = "org.mapstruct", name = "mapstruct-processor", version.ref = "mapstruct" }
+
+aspectjrt = { group = "org.aspectj", name = "aspectjrt", version.ref = "aspectj" }
+aspectjweaver = { group = "org.aspectj", name = "aspectjweaver", version.ref = "aspectj" }
+
+jackson-databind = { group = "com.fasterxml.jackson.core", name = "jackson-databind", version.ref = "jackson" }
+
+jjwt-api = { group = "io.jsonwebtoken", name = "jjwt-api", version.ref = "jwt" }
+jjwt-impl = { group = "io.jsonwebtoken", name = "jjwt-impl", version.ref = "jwt" }
+jjwt-jackson = { group = "io.jsonwebtoken", name = "jjwt-jackson", version.ref = "jwt" }
+
+jsoup = { group = "org.jsoup", name = "jsoup", version.ref = "jsoup" }
+
+slf4j-api = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
+
+caffeine = { group = "com.github.ben-manes.caffeine", name = "caffeine", version.ref = "caffeine" }
+
+pgvector = { group = "com.pgvector", name = "pgvector", version.ref = "pgvector" }
+
+spring-ai-bom = { group = "org.springframework.ai", name = "spring-ai-bom", version.ref = "ai-bom" }
+
+springdoc-openapi-starter-webmvc-ui = { group = "org.springdoc", name = "springdoc-openapi-starter-webmvc-ui", version.ref = "springdoc" }
+
+hibernate-vector = { group = "org.hibernate.orm", name = "hibernate-vector", version.ref = "hibernate-vector" }
+
+archunit-junit5 = { group = "com.tngtech.archunit", name = "archunit-junit5", version.ref = "archunit" }
+
+testcontainers-bom = { group = "org.testcontainers", name = "testcontainers-bom", version.ref = "testcontainers" }
+testcontainers-junit-jupiter = { group = "org.testcontainers", name = "junit-jupiter", version.ref = "testcontainers" }
+testcontainers-postgresql = { group = "org.testcontainers", name = "postgresql", version.ref = "testcontainers" }
+
+spring-boot-starter = { group = "org.springframework.boot", name = "spring-boot-starter" }
+spring-boot-starter-web = { group = "org.springframework.boot", name = "spring-boot-starter-web" }
+spring-boot-starter-data-jpa = { group = "org.springframework.boot", name = "spring-boot-starter-data-jpa" }
+spring-boot-starter-hateoas = { group = "org.springframework.boot", name = "spring-boot-starter-hateoas" }
+spring-boot-starter-security = { group = "org.springframework.boot", name = "spring-boot-starter-security" }
+spring-boot-starter-oauth2-client = { group = "org.springframework.boot", name = "spring-boot-starter-oauth2-client" }
+spring-boot-starter-oauth2-resource-server = { group = "org.springframework.boot", name = "spring-boot-starter-oauth2-resource-server" }
+spring-boot-starter-cache = { group = "org.springframework.boot", name = "spring-boot-starter-cache" }
+spring-boot-starter-actuator = { group = "org.springframework.boot", name = "spring-boot-starter-actuator" }
+spring-boot-starter-test = { group = "org.springframework.boot", name = "spring-boot-starter-test" }
+spring-boot-configuration-processor = { group = "org.springframework.boot", name = "spring-boot-configuration-processor" }
+spring-boot-testcontainers = { group = "org.springframework.boot", name = "spring-boot-testcontainers" }
+
+spring-context = { group = "org.springframework", name = "spring-context" }
+spring-tx = { group = "org.springframework", name = "spring-tx" }
+
+flyway-core = { group = "org.flywaydb", name = "flyway-core" }
+flyway-database-postgresql = { group = "org.flywaydb", name = "flyway-database-postgresql" }
+
+postgresql = { group = "org.postgresql", name = "postgresql" }
+
+spring-ai-starter-model-google-genai = { group = "org.springframework.ai", name = "spring-ai-starter-model-google-genai" }
+
+micrometer-registry-prometheus = { group = "io.micrometer", name = "micrometer-registry-prometheus" }
+
+rest-assured = { group = "io.rest-assured", name = "rest-assured" }
+rest-assured-json-path = { group = "io.rest-assured", name = "json-path" }
+rest-assured-xml-path = { group = "io.rest-assured", name = "xml-path" }
+
+junit-bom = { group = "org.junit", name = "junit-bom", version.ref = "junit-bom" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter" }
+junit-platform-launcher = { group = "org.junit.platform", name = "junit-platform-launcher" }
+
+spring-security-test = { group = "org.springframework.security", name = "spring-security-test" }
+
+[bundles]
+spring-boot-starters = [
+    "spring-boot-starter-web",
+    "spring-boot-starter-data-jpa",
+    "spring-boot-starter-hateoas",
+    "spring-boot-starter-security",
+    "spring-boot-starter-oauth2-client",
+    "spring-boot-starter-oauth2-resource-server",
+    "spring-boot-starter-cache",
+    "spring-boot-starter-actuator"
+]
+
+[plugins]
+sonarqube = { id = "org.sonarqube", version.ref = "sonarqube" }
+jacoco = { id = "jacoco" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+flyway = { id = "org.flywaydb.flyway", version.ref = "flyway-plugin" }
+spring-boot = { id = "org.springframework.boot", version.ref = "spring-boot" }
+spring-dependency-management = { id = "io.spring.dependency-management", version.ref = "spring-dependency-management" }

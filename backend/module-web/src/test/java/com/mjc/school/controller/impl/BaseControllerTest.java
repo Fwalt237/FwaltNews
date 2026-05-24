@@ -1,5 +1,7 @@
 package com.mjc.school.controller.impl;
 
+import static io.restassured.RestAssured.given;
+
 import com.mjc.school.service.fetcher.NewsFetcherService;
 import io.restassured.RestAssured;
 import io.restassured.builder.RequestSpecBuilder;
@@ -24,107 +26,120 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.jdbc.JdbcTestUtils;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
-import static io.restassured.RestAssured.given;
 
 @SpringBootTest(
-        webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {
-                "spring.main.allow-bean-definition-overriding=true",
-                "jwt.secret=YWxsYmVpbmduaWNlYW5kbG9uZ2Vub3VnaHRvc2F0aXNmeWhtYWNzaGEx",
-                "jwt.expiration=3600000"
-        }
-)
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = {
+      "spring.main.allow-bean-definition-overriding=true",
+      "jwt.secret=YWxsYmVpbmduaWNlYW5kbG9uZ2Vub3VnaHRvc2F0aXNmeWhtYWNzaGEx",
+      "jwt.expiration=3600000"
+    })
 @EntityScan("com.mjc.school.repository.airepo.model")
 public abstract class BaseControllerTest {
 
-    @ServiceConnection
-    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>(
-            DockerImageName.parse("pgvector/pgvector:pg17")
-    )
-            .withDatabaseName("jenkinsdb")
-            .withUsername("postgres")
-            .withPassword("postgres");
+  @ServiceConnection
+  static PostgreSQLContainer<?> postgres =
+      new PostgreSQLContainer<>(DockerImageName.parse("pgvector/pgvector:pg17"))
+          .withDatabaseName("jenkinsdb")
+          .withUsername("postgres")
+          .withPassword("postgres");
 
-    static {
-        postgres.start();
-    }
+  static {
+    postgres.start();
+  }
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.flyway.enabled", () -> "false");
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
-        registry.add("spring.sql.init.mode", () -> "always");
-        registry.add("spring.ai.google.genai.api-key", () -> "test-key");
-    }
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.flyway.enabled", () -> "false");
+    registry.add("spring.jpa.hibernate.ddl-auto", () -> "create");
+    registry.add("spring.sql.init.mode", () -> "always");
+    registry.add("spring.ai.google.genai.api-key", () -> "test-key");
+  }
 
-    @LocalServerPort
-    protected int port;
+  @LocalServerPort protected int port;
 
-    @Autowired
-    protected JdbcTemplate jdbcTemplate;
+  @Autowired protected JdbcTemplate jdbcTemplate;
 
-    @MockBean
-    protected ClientRegistrationRepository clientRegistrationRepository;
+  @MockBean protected ClientRegistrationRepository clientRegistrationRepository;
 
-    @MockBean
-    protected OAuth2AuthorizedClientService authorizedClientService;
+  @MockBean protected OAuth2AuthorizedClientService authorizedClientService;
 
-    @MockBean
-    protected NewsFetcherService newsFetcherService;
+  @MockBean protected NewsFetcherService newsFetcherService;
 
-    protected RequestSpecification requestSpecification;
+  protected RequestSpecification requestSpecification;
 
-    protected String adminToken;
+  protected String adminToken;
 
-    private static final String ADMIN_BCRYPT = "$2a$10$slYQmyNdGzTn7ZLBXBChFOC9f6kFjAqPhccnP6DxlWXx2lPk1C3G6";
+  private static final String ADMIN_BCRYPT =
+      "$2a$10$slYQmyNdGzTn7ZLBXBChFOC9f6kFjAqPhccnP6DxlWXx2lPk1C3G6";
 
-    @BeforeEach
-    void setUp() throws ServletException, IOException {
+  @BeforeEach
+  void setUp() throws ServletException, IOException {
 
-        JdbcTestUtils.deleteFromTables(jdbcTemplate,"chat_messages", "news_embeddings", "newstags","comments","news", "authors", "tags","user_roles","users");
+    JdbcTestUtils.deleteFromTables(
+        jdbcTemplate,
+        "chat_messages",
+        "news_embeddings",
+        "newstags",
+        "comments",
+        "news",
+        "authors",
+        "tags",
+        "user_roles",
+        "users");
 
-        RestAssured.port = port;
-        RestAssured.basePath = "/api/v1";
+    RestAssured.port = port;
+    RestAssured.basePath = "/api/v1";
 
-        adminToken = obtainAccessToken();
+    adminToken = obtainAccessToken();
 
-        requestSpecification = new RequestSpecBuilder()
-                .setContentType(ContentType.JSON)
-                .setAccept(ContentType.JSON)
-                .addHeader("Authorization", "Bearer " + adminToken)
-                .addFilter(new RequestLoggingFilter())
-                .addFilter(new ResponseLoggingFilter())
-                .build();
-    }
+    requestSpecification =
+        new RequestSpecBuilder()
+            .setContentType(ContentType.JSON)
+            .setAccept(ContentType.JSON)
+            .addHeader("Authorization", "Bearer " + adminToken)
+            .addFilter(new RequestLoggingFilter())
+            .addFilter(new ResponseLoggingFilter())
+            .build();
+  }
 
-    private String obtainAccessToken() {
-        jdbcTemplate.update("""
+  private String obtainAccessToken() {
+    jdbcTemplate.update(
+        """
         INSERT INTO users (username, password, email, first_name, last_name,
                           enabled, account_non_expired, credentials_non_expired, account_non_locked, provider)
         VALUES ('admin', ?, 'admin@mail.com', 'Admin', 'User', true, true, true, true, 'LOCAL')
-        """, ADMIN_BCRYPT);
-        jdbcTemplate.update("INSERT INTO user_roles (user_id, role) VALUES ((SELECT id FROM users WHERE username = 'admin'), 'ROLE_ADMIN')");
+        """,
+        ADMIN_BCRYPT);
+    jdbcTemplate.update(
+        "INSERT INTO user_roles (user_id, role) VALUES ((SELECT id FROM users WHERE username = 'admin'), 'ROLE_ADMIN')");
 
-        return given()
-                .contentType(ContentType.JSON)
-                .body("{\"username\":\"admin\",\"password\":\"password\"}")
-                .post("/auth/login")
-                .then().extract().path("token");
-    }
+    return given()
+        .contentType(ContentType.JSON)
+        .body("{\"username\":\"admin\",\"password\":\"password\"}")
+        .post("/auth/login")
+        .then()
+        .extract()
+        .path("token");
+  }
 
-    protected String obtainUserToken() {
-        jdbcTemplate.update("""
+  protected String obtainUserToken() {
+    jdbcTemplate.update(
+        """
         INSERT INTO users (username, password, email, first_name, last_name,
                           enabled, account_non_expired, credentials_non_expired, account_non_locked, provider)
         VALUES ('regularUser', ?, 'user@mail.com', 'Regular', 'User', true, true, true, true, 'LOCAL')
-        """, ADMIN_BCRYPT);
-        jdbcTemplate.update("INSERT INTO user_roles (user_id, role) VALUES ((SELECT id FROM users WHERE username = 'regularUser'), 'ROLE_USER')");
+        """,
+        ADMIN_BCRYPT);
+    jdbcTemplate.update(
+        "INSERT INTO user_roles (user_id, role) VALUES ((SELECT id FROM users WHERE username = 'regularUser'), 'ROLE_USER')");
 
-        return given()
-                .contentType(ContentType.JSON)
-                .body("{\"username\":\"regularUser\",\"password\":\"password\"}")
-                .post("/auth/login")
-                .then().extract().path("token");
-    }
-
+    return given()
+        .contentType(ContentType.JSON)
+        .body("{\"username\":\"regularUser\",\"password\":\"password\"}")
+        .post("/auth/login")
+        .then()
+        .extract()
+        .path("token");
+  }
 }

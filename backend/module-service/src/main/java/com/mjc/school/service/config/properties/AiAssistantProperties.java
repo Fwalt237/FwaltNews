@@ -4,16 +4,16 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-@ConfigurationProperties(prefix="app.ai")
+@ConfigurationProperties(prefix = "app.ai")
 public class AiAssistantProperties {
 
-    private int maxHistoryTurns;
+  private int maxHistoryTurns;
 
-    public int getMaxHistoryTurns() {
-        return maxHistoryTurns;
-    }
+  public int getMaxHistoryTurns() {
+    return maxHistoryTurns;
+  }
 
-    public void setMaxHistoryTurns(int maxHistoryTurns) {
-        this.maxHistoryTurns = maxHistoryTurns;
-    }
+  public void setMaxHistoryTurns(int maxHistoryTurns) {
+    this.maxHistoryTurns = maxHistoryTurns;
+  }
 }

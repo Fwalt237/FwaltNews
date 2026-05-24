@@ -8,10 +8,11 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Configuration
 public class WebMvcRegistrationsConfig implements WebMvcRegistrations {
 
-    @Override
-    public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {
-        ApiVersionRequestMappingHandlerMapping handlerMapping = new ApiVersionRequestMappingHandlerMapping();
-        handlerMapping.setOrder(0);
-        return handlerMapping;
-    }
+  @Override
+  public RequestMappingHandlerMapping getRequestMappingHandlerMapping() {
+    ApiVersionRequestMappingHandlerMapping handlerMapping =
+        new ApiVersionRequestMappingHandlerMapping();
+    handlerMapping.setOrder(0);
+    return handlerMapping;
+  }
 }

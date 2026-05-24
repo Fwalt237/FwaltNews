@@ -6,9 +6,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface ChatMessagesRepository extends JpaRepository<ChatMessages,Long> {
+public interface ChatMessagesRepository extends JpaRepository<ChatMessages, Long> {
 
-    List<ChatMessages> findBySessionIdOrderByCreatedAtAsc(String sessionId);
+  List<ChatMessages> findBySessionIdOrderByCreatedAtAsc(String sessionId);
 
-    void deleteBySessionId(String sessionId);
+  void deleteBySessionId(String sessionId);
 }

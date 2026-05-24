@@ -4,13 +4,13 @@ import com.mjc.school.service.dto.PageDtoResponse;
 
 public interface BaseController<C, R, G, S, U> {
 
-    PageDtoResponse<R> readAll(S searchRequest);
+  PageDtoResponse<R> readAll(S searchRequest);
 
-    R readById(G id);
+  R readById(G id);
 
-    R create(C createRequest);
+  R create(C createRequest);
 
-    R update(G id, U updateRequest);
+  R update(G id, U updateRequest);
 
-    void deleteById(G id);
+  void deleteById(G id);
 }

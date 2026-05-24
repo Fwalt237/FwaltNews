@@ -6,13 +6,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class MaxConstraintChecker implements ConstraintChecker<Max> {
 
-    @Override
-    public boolean check(final Object value, final Max constraint) {
-        return !(value instanceof Number number) || number.longValue() <= constraint.value();
-    }
+  @Override
+  public boolean check(final Object value, final Max constraint) {
+    return !(value instanceof Number number) || number.longValue() <= constraint.value();
+  }
 
-    @Override
-    public Class<Max> getType() {
-        return Max.class;
-    }
+  @Override
+  public Class<Max> getType() {
+    return Max.class;
+  }
 }

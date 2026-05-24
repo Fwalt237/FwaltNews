@@ -7,18 +7,17 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
-
 @SpringBootApplication
-@PropertySource(value="classpath:secrets.properties", ignoreResourceNotFound=true)
+@PropertySource(value = "classpath:secrets.properties", ignoreResourceNotFound = true)
 @EnableScheduling
 public class Main extends SpringBootServletInitializer {
 
-    @Override
-    protected SpringApplicationBuilder configure(SpringApplicationBuilder builder){
-        return builder.sources(Main.class);
-    }
-    
-    public static void main(String[] args) {
-        SpringApplication.run(Main.class, args);
-    }
+  @Override
+  protected SpringApplicationBuilder configure(SpringApplicationBuilder builder) {
+    return builder.sources(Main.class);
+  }
+
+  public static void main(String[] args) {
+    SpringApplication.run(Main.class, args);
+  }
 }

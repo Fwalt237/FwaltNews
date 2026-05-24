@@ -1,5 +1,3 @@
 package com.mjc.school.repository.filter.sorting;
 
-
-public record Sorting (String field, SortOrder order) {
-}
+public record Sorting(String field, SortOrder order) {}

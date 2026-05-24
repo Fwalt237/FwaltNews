@@ -4,7 +4,7 @@ import java.lang.annotation.Annotation;
 
 public interface ConstraintChecker<T extends Annotation> {
 
-    boolean check(Object value, T constraint);
+  boolean check(Object value, T constraint);
 
-    Class<T> getType();
+  Class<T> getType();
 }

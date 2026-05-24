@@ -1,5 +1,14 @@
 package com.mjc.school.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.mjc.school.repository.filter.pagination.Pagination;
 import com.mjc.school.repository.impl.AuthorRepository;
 import com.mjc.school.repository.impl.NewsRepository;
@@ -36,189 +45,203 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyList;
-import static org.mockito.Mockito.doNothing;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 @ExtendWith(MockitoExtension.class)
 @DisplayName("News Service Unit tests")
 class NewsServiceTest {
 
-    @Mock
-    private NewsRepository newsRepository;
+  @Mock private NewsRepository newsRepository;
 
-    @Mock
-    private TagRepository tagRepository;
+  @Mock private TagRepository tagRepository;
 
-    @Mock
-    private AuthorRepository authorRepository;
+  @Mock private AuthorRepository authorRepository;
 
-    @Mock
-    private NewsMapper mapper;
+  @Mock private NewsMapper mapper;
 
-    @Mock
-    private NewsSearchFilterMapper newsSearchFilterMapper;
+  @Mock private NewsSearchFilterMapper newsSearchFilterMapper;
 
-    @InjectMocks
-    private NewsService newsService;
+  @InjectMocks private NewsService newsService;
 
-    private News news;
-    private CreateNewsDtoRequest createRequest;
-    private UpdateNewsDtoRequest updateRequest;
-    private NewsDtoResponse newsDtoResponse;
+  private News news;
+  private CreateNewsDtoRequest createRequest;
+  private UpdateNewsDtoRequest updateRequest;
+  private NewsDtoResponse newsDtoResponse;
 
-    @BeforeEach
-    void setUp(){
-        news = new News();
-        news.setId(1L);
-        news.setTitle("Java");
-        news.setContent("Language");
-        news.setCreatedDate(LocalDateTime.now());
-        news.setLastUpdatedDate(LocalDateTime.now());
-        news.setTags(new ArrayList<>());
-        news.setComments(new ArrayList<>());
+  @BeforeEach
+  void setUp() {
+    news = new News();
+    news.setId(1L);
+    news.setTitle("Java");
+    news.setContent("Language");
+    news.setCreatedDate(LocalDateTime.now());
+    news.setLastUpdatedDate(LocalDateTime.now());
+    news.setTags(new ArrayList<>());
+    news.setComments(new ArrayList<>());
 
-        createRequest = new CreateNewsDtoRequest("Java","Language","https://example.com/image.jpg","https://example.com/icon.png","Gosling", List.of("Technology"),new ArrayList<>());
-        updateRequest = new UpdateNewsDtoRequest("Java","Language","https://example.com/image.jpg","https://example.com/icon.png","Gosling", List.of("Technology"),new ArrayList<>());
-        newsDtoResponse  = new NewsDtoResponse(1L,"Java","Language","https://example.com/image.jpg","https://example.com/icon.png",LocalDateTime.now(),LocalDateTime.now(),
-                new AuthorDtoResponse(1L,"Gosling",LocalDateTime.now(),LocalDateTime.now()),
-                List.of(new TagDtoResponse(1L,"Technology")),
-                new ArrayList<>());
+    createRequest =
+        new CreateNewsDtoRequest(
+            "Java",
+            "Language",
+            "https://example.com/image.jpg",
+            "https://example.com/icon.png",
+            "Gosling",
+            List.of("Technology"),
+            new ArrayList<>());
+    updateRequest =
+        new UpdateNewsDtoRequest(
+            "Java",
+            "Language",
+            "https://example.com/image.jpg",
+            "https://example.com/icon.png",
+            "Gosling",
+            List.of("Technology"),
+            new ArrayList<>());
+    newsDtoResponse =
+        new NewsDtoResponse(
+            1L,
+            "Java",
+            "Language",
+            "https://example.com/image.jpg",
+            "https://example.com/icon.png",
+            LocalDateTime.now(),
+            LocalDateTime.now(),
+            new AuthorDtoResponse(1L, "Gosling", LocalDateTime.now(), LocalDateTime.now()),
+            List.of(new TagDtoResponse(1L, "Technology")),
+            new ArrayList<>());
+  }
 
-    }
+  @Test
+  @DisplayName("Should return all news with pagination")
+  void readAll_ShouldReturnPagedNews() {
+    // Given
+    ResourceSearchFilterRequestDTO searchRequest =
+        new ResourceSearchFilterRequestDTO(1, 10, Collections.emptyList(), Collections.emptyList());
+    Page<News> page = new PageImpl<>(List.of(news));
 
-    @Test
-    @DisplayName("Should return all news with pagination")
-    void readAll_ShouldReturnPagedNews(){
+    when(newsSearchFilterMapper.map(any()))
+        .thenReturn(
+            new ResourceSearchFilter(
+                new Pagination(1, 10), Collections.emptyList(), Collections.emptyList()));
+    when(newsRepository.findAll(ArgumentMatchers.<Specification<News>>any(), any(Pageable.class)))
+        .thenReturn(page);
+    when(mapper.modelListToDtoList(anyList())).thenReturn(List.of(newsDtoResponse));
+    // When
+    PageDtoResponse<NewsDtoResponse> result = newsService.readAll(searchRequest);
+    // Then
+    assertThat(result).isNotNull();
+    assertThat(result.getModelDtoList()).hasSize(1);
+    assertThat(result.getCurrentPage()).isEqualTo(1);
+    assertThat(result.getPageCount()).isEqualTo(1);
+    verify(newsRepository)
+        .findAll(ArgumentMatchers.<Specification<News>>any(), any(Pageable.class));
+  }
 
-        ResourceSearchFilterRequestDTO searchRequest = new ResourceSearchFilterRequestDTO(1,10, Collections.emptyList(),Collections.emptyList());
-        Page<News> page = new PageImpl<>(List.of(news));
+  @Test
+  @DisplayName("Should return news ID when news exists")
+  void readById_WhenNewsExists_ShouldReturnNews() {
+    // Given
+    when(newsRepository.findById(1L)).thenReturn(Optional.of(news));
+    when(mapper.modelToDto(news)).thenReturn(newsDtoResponse);
+    // When
+    NewsDtoResponse result = newsService.readById(1L);
+    // Then
+    assertThat(result).isNotNull();
+    assertThat(result.getId()).isEqualTo(1L);
+    assertThat(result.getTitle()).isEqualTo("Java");
+    assertThat(result.getContent()).isEqualTo("Language");
 
-        when(newsSearchFilterMapper.map(any())).thenReturn(new ResourceSearchFilter(new Pagination(1, 10),Collections.emptyList(),Collections.emptyList()));
-        when(newsRepository.findAll(ArgumentMatchers.<Specification<News>>any(),any(Pageable.class))).thenReturn(page);
-        when(mapper.modelListToDtoList(anyList())).thenReturn(List.of(newsDtoResponse));
+    verify(newsRepository).findById(1L);
+  }
 
-        PageDtoResponse<NewsDtoResponse> result = newsService.readAll(searchRequest);
+  @Test
+  @DisplayName("Should throw NotFoundException when news does not exist")
+  void readById_WhenNewsDoesNotExist_ShouldThrowNotFoundException() {
+    // Given
+    when(newsRepository.findById(2L)).thenReturn(Optional.empty());
+    // When
+    assertThatThrownBy(() -> newsService.readById(2L))
+        .isInstanceOf(NotFoundException.class)
+        .hasMessageContaining("News with id 2 does not exist.");
+    // Then
+    verify(newsRepository).findById(2L);
+  }
 
-        assertThat(result).isNotNull();
-        assertThat(result.getModelDtoList()).hasSize(1);
-        assertThat(result.getCurrentPage()).isEqualTo(1);
-        assertThat(result.getPageCount()).isEqualTo(1);
-        verify(newsRepository).findAll(ArgumentMatchers.<Specification<News>>any(),any(Pageable.class));
-    }
+  @Test
+  @DisplayName("Should create news successfully with new author and tags")
+  void create_ShouldCreateNewsWithNewAuthorAndTags() {
+    // Given
+    when(authorRepository.findByName("Gosling")).thenReturn(Optional.empty());
+    when(tagRepository.findByName("Technology")).thenReturn(Optional.empty());
 
-    @Test
-    @DisplayName("Should return news ID when news exists")
-    void readById_WhenNewsExists_ShouldReturnNews(){
+    when(mapper.dtoToModel(createRequest)).thenReturn(news);
+    when(newsRepository.save(news)).thenReturn(news);
+    when(mapper.modelToDto(news)).thenReturn(newsDtoResponse);
+    // When
+    NewsDtoResponse result = newsService.create(createRequest);
+    // Then
+    assertThat(result).isNotNull();
+    assertThat(result.getId()).isEqualTo(1L);
+    assertThat(result.getContent()).isEqualTo("Language");
+    verify(authorRepository).save(any(Author.class));
+    verify(tagRepository).save(any(Tag.class));
+    verify(newsRepository).save(news);
+  }
 
-        when(newsRepository.findById(1L)).thenReturn(Optional.of(news));
-        when(mapper.modelToDto(news)).thenReturn(newsDtoResponse);
+  @Test
+  @DisplayName("Should update news with new author and tag when news exists")
+  void update_WhenNewsExists_ShouldUpdateNews() {
+    // Given
+    Author mockAuthor = new Author();
+    mockAuthor.setId(1L);
+    mockAuthor.setName("Gosling");
 
-        NewsDtoResponse result = newsService.readById(1L);
+    Tag mockTag = new Tag();
+    mockTag.setId(1L);
+    mockTag.setName("Technology");
 
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getTitle()).isEqualTo("Java");
-        assertThat(result.getContent()).isEqualTo("Language");
+    when(newsRepository.findById(1L)).thenReturn(Optional.of(news));
 
-        verify(newsRepository).findById(1L);
-    }
+    when(authorRepository.findByName("Gosling"))
+        .thenReturn(Optional.empty())
+        .thenReturn(Optional.of(mockAuthor));
 
-    @Test
-    @DisplayName("Should throw NotFoundException when news does not exist")
-    void readById_WhenNewsDoesNotExist_ShouldThrowNotFoundException(){
+    when(tagRepository.findByName("Technology"))
+        .thenReturn(Optional.empty())
+        .thenReturn(Optional.of(mockTag));
 
-        when(newsRepository.findById(2L)).thenReturn(Optional.empty());
+    when(newsRepository.save(any(News.class))).thenReturn(news);
+    when(mapper.modelToDto(news)).thenReturn(newsDtoResponse);
+    // When
+    NewsDtoResponse result = newsService.update(1L, updateRequest);
+    // Then
+    assertThat(result).isNotNull();
+    assertThat(result.getContent()).isEqualTo("Language");
+    verify(authorRepository).save(any(Author.class));
+    verify(tagRepository).save(any(Tag.class));
+    verify(newsRepository).save(any(News.class));
+  }
 
-        assertThatThrownBy(()->newsService.readById(2L))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("News with id 2 does not exist.");
+  @Test
+  @DisplayName("Should delete news when news exists")
+  void deleteById_WhenNewsExists_ShouldDeleteNews() {
+    // Given
+    when(newsRepository.existsById(1L)).thenReturn(true);
+    doNothing().when(newsRepository).deleteById(1L);
+    // When
+    newsService.deleteById(1L);
+    // Then
+    verify(newsRepository).deleteById(1L);
+  }
 
-        verify(newsRepository).findById(2L);
-    }
-
-    @Test
-    @DisplayName("Should create news successfully with new author and tags")
-    void create_ShouldCreateNewsWithNewAuthorAndTags(){
-        when(authorRepository.findByName("Gosling")).thenReturn(Optional.empty());
-        when(tagRepository.findByName("Technology")).thenReturn(Optional.empty());
-
-        when(mapper.dtoToModel(createRequest)).thenReturn(news);
-        when(newsRepository.save(news)).thenReturn(news);
-        when(mapper.modelToDto(news)).thenReturn(newsDtoResponse);
-
-        NewsDtoResponse result = newsService.create(createRequest);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getId()).isEqualTo(1L);
-        assertThat(result.getContent()).isEqualTo("Language");
-        verify(authorRepository).save(any(Author.class));
-        verify(tagRepository).save(any(Tag.class));
-        verify(newsRepository).save(news);
-    }
-
-    @Test
-    @DisplayName("Should update news with new author and tag when news exists")
-    void update_WhenNewsExists_ShouldUpdateNews(){
-        Author mockAuthor = new Author();
-        mockAuthor.setId(1L);
-        mockAuthor.setName("Gosling");
-
-        Tag mockTag = new Tag();
-        mockTag.setId(1L);
-        mockTag.setName("Technology");
-
-        when(newsRepository.findById(1L)).thenReturn(Optional.of(news));
-
-        when(authorRepository.findByName("Gosling"))
-                .thenReturn(Optional.empty())
-                .thenReturn(Optional.of(mockAuthor));
-
-        when(tagRepository.findByName("Technology"))
-                .thenReturn(Optional.empty())
-                .thenReturn(Optional.of(mockTag));
-
-        when(newsRepository.save(any(News.class))).thenReturn(news);
-        when(mapper.modelToDto(news)).thenReturn(newsDtoResponse);
-
-        NewsDtoResponse result = newsService.update(1L, updateRequest);
-
-        assertThat(result).isNotNull();
-        assertThat(result.getContent()).isEqualTo("Language");
-        verify(authorRepository).save(any(Author.class));
-        verify(tagRepository).save(any(Tag.class));
-        verify(newsRepository).save(any(News.class));
-    }
-
-    @Test
-    @DisplayName("Should delete news when news exists")
-    void deleteById_WhenNewsExists_ShouldDeleteNews(){
-
-        when(newsRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(newsRepository).deleteById(1L);
-
-        newsService.deleteById(1L);
-
-        verify(newsRepository).deleteById(1L);
-    }
-
-
-    @Test
-    @DisplayName("Should throw NotFoundException when deleting non-existent news")
-    void deleteById_WhenCommentDoesNotExist_ShouldThrowNotFoundException(){
-
-        when(newsRepository.existsById(2L)).thenReturn(false);
-
-        assertThatThrownBy(()->newsService.deleteById(2L))
-                .isInstanceOf(NotFoundException.class)
-                .hasMessageContaining("News with id 2 does not exist.");
-
-        verify(newsRepository,never()).deleteById(any());
-    }
+  @Test
+  @DisplayName("Should throw NotFoundException when deleting non-existent news")
+  void deleteById_WhenCommentDoesNotExist_ShouldThrowNotFoundException() {
+    // Given
+    when(newsRepository.existsById(2L)).thenReturn(false);
+    // When
+    assertThatThrownBy(() -> newsService.deleteById(2L))
+        .isInstanceOf(NotFoundException.class)
+        .hasMessageContaining("News with id 2 does not exist.");
+    // Then
+    verify(newsRepository, never()).deleteById(any());
+  }
 }

@@ -12,7 +12,7 @@ import java.lang.annotation.Target;
 @Constraint
 public @interface Size {
 
-    int min() default -1;
+  int min() default -1;
 
-    int max() default -1;
+  int max() default -1;
 }

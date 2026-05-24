@@ -1,5 +1,13 @@
 package com.mjc.school.service.impl;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.data.Offset.offset;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyList;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
 import com.mjc.school.repository.airepo.impl.ChatMessagesRepository;
 import com.mjc.school.repository.airepo.impl.NewsEmbeddingsRepository;
 import com.mjc.school.repository.airepo.model.ChatMessages;
@@ -55,259 +63,279 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 
-import static org.mockito.Mockito.anyList;
-import static org.mockito.Mockito.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.data.Offset.offset;
-
 @SpringBootTest(
-        classes = AiAssistantServiceTest.TestConfig.class,
-        properties = {
-                "spring.main.allow-bean-definition-overriding=true",
-                "spring.jpa.hibernate.ddl-auto=create",
-                "spring.flyway.enabled=false",
-                "jwt.secret=dummy_test_secret_key_that_is_at_least_256_bits_long_for_hmac",
-                "jwt.expiration=3600000"
-        }
-)
+    classes = AiAssistantServiceTest.TestConfig.class,
+    properties = {
+      "spring.main.allow-bean-definition-overriding=true",
+      "spring.jpa.hibernate.ddl-auto=create",
+      "spring.flyway.enabled=false",
+      "jwt.secret=dummy_test_secret_key_that_is_at_least_256_bits_long_for_hmac",
+      "jwt.expiration=3600000"
+    })
 @Testcontainers
 @Transactional
 @Commit
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @DisplayName("AI Assistant Tests")
 class AiAssistantServiceTest {
-    @Container
-    static PostgreSQLContainer<?> postgres =
-            new PostgreSQLContainer<>(DockerImageName.parse("pgvector/pgvector:pg17"))
-                    .withDatabaseName("testdb")
-                    .withUsername("test")
-                    .withPassword("test")
-                    .withInitScript("init.sql");
+  @Container
+  static PostgreSQLContainer<?> postgres =
+      new PostgreSQLContainer<>(DockerImageName.parse("pgvector/pgvector:pg17"))
+          .withDatabaseName("testdb")
+          .withUsername("test")
+          .withPassword("test")
+          .withInitScript("init.sql");
 
-    @DynamicPropertySource
-    static void configureProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url",      postgres::getJdbcUrl);
-        registry.add("spring.datasource.username",  postgres::getUsername);
-        registry.add("spring.datasource.password",  postgres::getPassword);
-        registry.add("spring.jpa.properties.hibernate.dialect",
-                () -> "org.hibernate.dialect.PostgreSQLDialect");
-        registry.add("spring.ai.google.genai.api-key", () -> "test-key");
+  @DynamicPropertySource
+  static void configureProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+    registry.add(
+        "spring.jpa.properties.hibernate.dialect", () -> "org.hibernate.dialect.PostgreSQLDialect");
+    registry.add("spring.ai.google.genai.api-key", () -> "test-key");
+  }
+
+  @MockBean private MyEmbeddingClient embeddingClient;
+
+  @MockBean private NewsFetcherService newsFetcherService;
+
+  @Autowired private EmbeddingService embeddingService;
+  @Autowired private NewsTools newsTools;
+  @Autowired private AiAssistantService assistantService;
+  @Autowired private NewsEmbeddingsRepository embeddingRepository;
+  @Autowired private ChatMessagesRepository chatMessagesRepository;
+  @Autowired private NewsRepository newsRepository;
+  @Autowired private AuthorRepository authorRepository;
+  @Autowired private TagRepository tagRepository;
+  @Autowired private ApplicationContext applicationContext;
+
+  private static Long techNewsId;
+  private static Long climateNewsId;
+
+  @SpringBootConfiguration
+  @EnableAutoConfiguration(
+      exclude = {
+        FlywayAutoConfiguration.class,
+        SecurityAutoConfiguration.class,
+        OAuth2ClientAutoConfiguration.class
+      })
+  @EnableJpaRepositories(basePackages = "com.mjc.school.repository")
+  @EntityScan(
+      basePackages = {"com.mjc.school.repository.model", "com.mjc.school.repository.airepo.model"})
+  @ComponentScan(basePackages = "com.mjc.school.service")
+  @TestConfiguration
+  @EnableWebSecurity
+  @ImportAutoConfiguration(SecurityAutoConfiguration.class)
+  static class TestConfig {
+    @Bean
+    public ChatClient.Builder chatClientBuilder() {
+      ChatClient mockClient = mock(ChatClient.class);
+      ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
+      ChatClient.CallResponseSpec callSpec = mock(ChatClient.CallResponseSpec.class);
+
+      when(mockClient.prompt()).thenReturn(requestSpec);
+      when(requestSpec.system(anyString())).thenReturn(requestSpec);
+      when(requestSpec.messages(anyList())).thenReturn(requestSpec);
+      when(requestSpec.call()).thenReturn(callSpec);
+      when(callSpec.content()).thenReturn("Here are the latest articles. ARTICLES_FOUND:[1]");
+
+      ChatClient.Builder builder = mock(ChatClient.Builder.class);
+      when(builder.defaultTools(any())).thenReturn(builder);
+      when(builder.build()).thenReturn(mockClient);
+      return builder;
     }
 
-    @MockBean
-    private MyEmbeddingClient embeddingClient;
-
-    @MockBean
-    private NewsFetcherService newsFetcherService;
-
-    @Autowired private EmbeddingService embeddingService;
-    @Autowired private NewsTools newsTools;
-    @Autowired private AiAssistantService assistantService;
-    @Autowired private NewsEmbeddingsRepository embeddingRepository;
-    @Autowired private ChatMessagesRepository chatMessagesRepository;
-    @Autowired private NewsRepository newsRepository;
-    @Autowired private AuthorRepository authorRepository;
-    @Autowired private TagRepository tagRepository;
-    @Autowired private ApplicationContext applicationContext;
-
-    private static Long techNewsId;
-    private static Long climateNewsId;
-
-    @SpringBootConfiguration
-    @EnableAutoConfiguration(exclude = {
-            FlywayAutoConfiguration.class,
-            SecurityAutoConfiguration.class,
-            OAuth2ClientAutoConfiguration.class
-    })
-    @EnableJpaRepositories(basePackages = "com.mjc.school.repository")
-    @EntityScan(basePackages = {
-            "com.mjc.school.repository.model",
-            "com.mjc.school.repository.airepo.model"
-    })
-    @ComponentScan(basePackages = "com.mjc.school.service")
-    @TestConfiguration
-    @EnableWebSecurity
-    @ImportAutoConfiguration(SecurityAutoConfiguration.class)
-    static class TestConfig {
-        @Bean
-        public ChatClient.Builder chatClientBuilder() {
-            ChatClient mockClient = mock(ChatClient.class);
-            ChatClient.ChatClientRequestSpec requestSpec = mock(ChatClient.ChatClientRequestSpec.class);
-            ChatClient.CallResponseSpec callSpec = mock(ChatClient.CallResponseSpec.class);
-
-            when(mockClient.prompt()).thenReturn(requestSpec);
-            when(requestSpec.system(anyString())).thenReturn(requestSpec);
-            when(requestSpec.messages(anyList())).thenReturn(requestSpec);
-            when(requestSpec.call()).thenReturn(callSpec);
-            when(callSpec.content()).thenReturn(
-                    "Here are the latest articles. ARTICLES_FOUND:[1]");
-
-            ChatClient.Builder builder = mock(ChatClient.Builder.class);
-            when(builder.defaultTools(any())).thenReturn(builder);
-            when(builder.build()).thenReturn(mockClient);
-            return builder;
-        }
-
-        @Bean
-        public ChatModel chatModel() {
-            return Mockito.mock(ChatModel.class);
-        }
-
-        @Bean
-        public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-            http.csrf(AbstractHttpConfigurer::disable)
-                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
-            return http.build();
-        }
+    @Bean
+    public ChatModel chatModel() {
+      return Mockito.mock(ChatModel.class);
     }
 
-    @BeforeEach
-    void setUp() {
-        float[] mockVector = new float[768];
-        Arrays.fill(mockVector, 0.1f);
-        when(embeddingClient.getEmbedding(anyString())).thenReturn(mockVector);
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+      http.csrf(AbstractHttpConfigurer::disable)
+          .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+      return http.build();
     }
+  }
 
-    @Test
-    @Order(1)
-    @DisplayName("pgvector container and schema migration should succeed")
-    void pgvectorContainerStarts() {
-        assertThat(postgres.isRunning()).isTrue();
-        assertThat(embeddingRepository.count()).isGreaterThanOrEqualTo(0);
-    }
+  @BeforeEach
+  void setUp() {
+    float[] mockVector = new float[768];
+    Arrays.fill(mockVector, 0.1f);
+    when(embeddingClient.getEmbedding(anyString())).thenReturn(mockVector);
+  }
 
-    @Test
-    @Order(2)
-    @DisplayName("EmbeddingService should save vector embedding for news article")
-    void embeddingService_embedsAndPersistsVector() {
-        Author author = new Author();
-        author.setName("Tech Author");
-        author = authorRepository.save(author);
+  @Test
+  @Order(1)
+  @DisplayName("pgvector container and schema migration should succeed")
+  void pgvectorContainerStarts() {
+    // Given
+    // container is started automatically via @Testcontainers
 
-        Tag tag = new Tag(); tag.setName("tech");
-        tag = tagRepository.save(tag);
+    // When
+    boolean running = postgres.isRunning();
+    long embeddingCount = embeddingRepository.count();
 
-        News news = new News();
-        news.setTitle("Breakthrough in Quantum Computing Announced");
-        news.setContent("Researchers have achieved a major milestone in quantum processing...");
-        news.setAuthor(author);
-        news.setTags(List.of(tag));
-        news = newsRepository.save(news);
-        techNewsId = news.getId();
+    // Then
+    assertThat(running).isTrue();
+    assertThat(embeddingCount).isGreaterThanOrEqualTo(0);
+  }
 
-        embeddingService.embedNews(news.getId());
-        assertThat(embeddingRepository.existsByNewsId(techNewsId)).isTrue();
-        float[] stored = embeddingRepository.findByNewsId(techNewsId)
-                .orElseThrow().getEmbedding();
-        assertThat(stored).hasSize(768);
-        assertThat(stored[0]).isEqualTo(0.1f, offset(0.01f));
-    }
+  @Test
+  @Order(2)
+  @DisplayName("EmbeddingService should save vector embedding for news article")
+  void embeddingService_embedsAndPersistsVector() {
+    // Given
+    Author author = new Author();
+    author.setName("Tech Author");
+    author = authorRepository.save(author);
 
-    @Test
-    @Order(3)
-    @DisplayName("EmbedMissing should not duplicate existing embeddings")
-    void embeddingService_embedMissingSkipsDuplicates() {
-        long before = embeddingRepository.count();
-        embeddingService.embedMissing();
-        long after  = embeddingRepository.count();
-        assertThat(after).isGreaterThanOrEqualTo(before);
-        assertThat(embeddingRepository.findAll().stream()
+    Tag tag = new Tag();
+    tag.setName("tech");
+    tag = tagRepository.save(tag);
+
+    News news = new News();
+    news.setTitle("Breakthrough in Quantum Computing Announced");
+    news.setContent("Researchers have achieved a major milestone in quantum processing...");
+    news.setAuthor(author);
+    news.setTags(List.of(tag));
+    news = newsRepository.save(news);
+    techNewsId = news.getId();
+
+    // When
+    embeddingService.embedNews(news.getId());
+
+    // Then
+    assertThat(embeddingRepository.existsByNewsId(techNewsId)).isTrue();
+    float[] stored = embeddingRepository.findByNewsId(techNewsId).orElseThrow().getEmbedding();
+    assertThat(stored).hasSize(768);
+    assertThat(stored[0]).isEqualTo(0.1f, offset(0.01f));
+  }
+
+  @Test
+  @Order(3)
+  @DisplayName("EmbedMissing should not duplicate existing embeddings")
+  void embeddingService_embedMissingSkipsDuplicates() {
+    // Given
+    long before = embeddingRepository.count();
+
+    // When
+    embeddingService.embedMissing();
+
+    // Then
+    long after = embeddingRepository.count();
+    assertThat(after).isGreaterThanOrEqualTo(before);
+    assertThat(
+            embeddingRepository.findAll().stream()
                 .filter(e -> e.getNews().getId().equals(techNewsId))
-                .count()).isEqualTo(1);
-    }
+                .count())
+        .isEqualTo(1);
+  }
 
-    @Test
-    @Order(4)
-    @DisplayName("SearchNewsByTopic should find semantically similar articles")
-    void newsTools_searchByTopic_returnsResults() {
-        Author author = new Author();
-        author.setName("Climate Author");
-        author = authorRepository.saveAndFlush(author);
+  @Test
+  @Order(4)
+  @DisplayName("SearchNewsByTopic should find semantically similar articles")
+  void newsTools_searchByTopic_returnsResults() {
+    // Given
+    Author author = new Author();
+    author.setName("Climate Author");
+    author = authorRepository.saveAndFlush(author);
 
-        Tag tag = new Tag();
-        tag.setName("climate");
-        tag = tagRepository.saveAndFlush(tag);
+    Tag tag = new Tag();
+    tag.setName("climate");
+    tag = tagRepository.saveAndFlush(tag);
 
-        News climate = new News();
-        climate.setTitle("Record Temperatures Hit Global Cities");
-        climate.setContent("Climate scientists warn of unprecedented heat waves spreading globally...");
-        climate.setAuthor(author);
-        climate.setTags(List.of(tag));
-        climate.setCreatedDate(LocalDateTime.now());
-        climate = newsRepository.saveAndFlush(climate);
+    News climate = new News();
+    climate.setTitle("Record Temperatures Hit Global Cities");
+    climate.setContent("Climate scientists warn of unprecedented heat waves spreading globally...");
+    climate.setAuthor(author);
+    climate.setTags(List.of(tag));
+    climate.setCreatedDate(LocalDateTime.now());
+    climate = newsRepository.saveAndFlush(climate);
 
-        climateNewsId = climate.getId();
-        embeddingService.embedNews(climateNewsId);
+    climateNewsId = climate.getId();
+    embeddingService.embedNews(climateNewsId);
+    embeddingRepository.flush();
 
-        embeddingRepository.flush();
+    // When
+    NewsSearchResult result =
+        newsTools.searchNewsByTopic("Record Temperatures Hit Global Cities", 1, 5);
 
-        NewsSearchResult result = newsTools.searchNewsByTopic("Record Temperatures Hit Global Cities", 1, 5);
-        assertThat(result.totalFound()).isGreaterThan(0);
-        assertThat(result.articles()).isNotEmpty();
-        result.articles().forEach(item -> assertThat(item.title()).isNotBlank());
-    }
+    // Then
+    assertThat(result.totalFound()).isGreaterThan(0);
+    assertThat(result.articles()).isNotEmpty();
+    result.articles().forEach(item -> assertThat(item.title()).isNotBlank());
+  }
 
-    @Test
-    @Order(5)
-    @DisplayName("GetLatestNewsByTag should filter correctly by tag name")
-    void newsTools_getLatestByTag_filtersCorrectly() {
-        NewsSearchResult techResult    = newsTools.getLatestNewsByTag("tech",    0, 5);
-        NewsSearchResult climateResult = newsTools.getLatestNewsByTag("climate", 0, 5);
+  @Test
+  @Order(5)
+  @DisplayName("GetLatestNewsByTag should filter correctly by tag name")
+  void newsTools_getLatestByTag_filtersCorrectly() {
+    // When
+    NewsSearchResult techResult = newsTools.getLatestNewsByTag("tech", 0, 5);
+    NewsSearchResult climateResult = newsTools.getLatestNewsByTag("climate", 0, 5);
 
-        assertThat(techResult.articles()).anyMatch(a -> a.tags().contains("tech"));
-        assertThat(climateResult.articles()).anyMatch(a -> a.tags().contains("climate"));
-    }
+    // Then
+    assertThat(techResult.articles()).anyMatch(a -> a.tags().contains("tech"));
+    assertThat(climateResult.articles()).anyMatch(a -> a.tags().contains("climate"));
+  }
 
-    @Test
-    @Order(6)
-    @DisplayName("GetTopRecentNews should return articles within time window")
-    void newsTools_getTopRecentNews_respectsTimeWindow() {
-        Tag tag = tagRepository.findByName("climate")
-                .orElseGet(() -> tagRepository.save(new Tag("climate")));
-        News recentNews = new News();
-        recentNews.setTitle("Recent Event");
-        recentNews.setContent("Something happened just now.");
-        recentNews.setAuthor(authorRepository.findAll().get(0));
+  @Test
+  @Order(6)
+  @DisplayName("GetTopRecentNews should return articles within time window")
+  void newsTools_getTopRecentNews_respectsTimeWindow() {
+    // Given
+    Tag tag =
+        tagRepository.findByName("climate").orElseGet(() -> tagRepository.save(new Tag("climate")));
+    News recentNews = new News();
+    recentNews.setTitle("Recent Event");
+    recentNews.setContent("Something happened just now.");
+    recentNews.setAuthor(authorRepository.findAll().get(0));
+    recentNews.setCreatedDate(LocalDateTime.now());
+    recentNews.setTags(List.of(tag));
+    newsRepository.saveAndFlush(recentNews);
 
-        recentNews.setCreatedDate(LocalDateTime.now());
-        recentNews.setTags(List.of(tag));
-        newsRepository.saveAndFlush(recentNews);
+    // When
+    NewsSearchResult result = newsTools.getTopRecentNews(1, 5);
 
-        NewsSearchResult result = newsTools.getTopRecentNews(1, 5);
+    // Then
+    assertThat(result.articles()).isNotEmpty();
+    result.articles().forEach(a -> assertThat(a.publishedAt()).isNotBlank());
+  }
 
-        assertThat(result.articles()).isNotEmpty();
-        result.articles().forEach(a -> assertThat(a.publishedAt()).isNotBlank());
-    }
+  @Test
+  @Order(7)
+  @DisplayName("Chat history should be persisted and retrieved per session")
+  void chatHistory_persistedAndRetrieved() {
+    // Given
+    String sessionId = "test-session-" + System.currentTimeMillis();
 
-    @Test
-    @Order(7)
-    @DisplayName("Chat history should be persisted and retrieved per session")
-    void chatHistory_persistedAndRetrieved() {
+    ChatMessages userMsg = new ChatMessages();
+    userMsg.setSessionId(sessionId);
+    userMsg.setRole("user");
+    userMsg.setContent("What is the latest tech news?");
 
-        String sessionId = "test-session-" + System.currentTimeMillis();
+    ChatMessages aiMsg = new ChatMessages();
+    aiMsg.setSessionId(sessionId);
+    aiMsg.setRole("assistant");
+    aiMsg.setContent("Here are the latest tech articles...");
 
-        ChatMessages userMsg = new ChatMessages();
-        userMsg.setSessionId(sessionId);
-        userMsg.setRole("user");
-        userMsg.setContent("What is the latest tech news?");
+    chatMessagesRepository.save(userMsg);
+    chatMessagesRepository.save(aiMsg);
 
-        ChatMessages aiMsg = new ChatMessages();
-        aiMsg.setSessionId(sessionId);
-        aiMsg.setRole("assistant");
-        aiMsg.setContent("Here are the latest tech articles...");
+    // When
+    var history = assistantService.getHistory(sessionId);
 
-        chatMessagesRepository.save(userMsg);
-        chatMessagesRepository.save(aiMsg);
+    // Then
+    assertThat(history).hasSize(2);
+    assertThat(history.get(0).role()).isEqualTo("user");
+    assertThat(history.get(1).role()).isEqualTo("assistant");
 
-        var history = assistantService.getHistory(sessionId);
-        assertThat(history).hasSize(2);
-        assertThat(history.get(0).role()).isEqualTo("user");
-        assertThat(history.get(1).role()).isEqualTo("assistant");
+    // When (clear)
+    assistantService.clearHistory(sessionId);
 
-        assistantService.clearHistory(sessionId);
-        assertThat(assistantService.getHistory(sessionId)).isEmpty();
-    }
+    // Then
+    assertThat(assistantService.getHistory(sessionId)).isEmpty();
+  }
 }

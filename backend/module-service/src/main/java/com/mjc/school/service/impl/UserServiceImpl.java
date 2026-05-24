@@ -1,4 +1,5 @@
 package com.mjc.school.service.impl;
+
 import com.mjc.school.repository.impl.UserRepository;
 import com.mjc.school.repository.model.user.Role;
 import com.mjc.school.repository.model.user.User;
@@ -12,38 +13,39 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserServiceImpl implements UserService {
 
-    private final UserRepository userRepository;
-    private final PasswordEncoder encoder;
+  private final UserRepository userRepository;
+  private final PasswordEncoder encoder;
 
-    @Autowired
-    public UserServiceImpl(UserRepository userRepository, PasswordEncoder encoder){
-        this.userRepository=userRepository;
-        this.encoder=encoder;
-    }
-    @Override
-    @Transactional(readOnly=true)
-    public boolean existsByUsername(String username) {
-        return userRepository.existsByUsername(username);
-    }
+  @Autowired
+  public UserServiceImpl(UserRepository userRepository, PasswordEncoder encoder) {
+    this.userRepository = userRepository;
+    this.encoder = encoder;
+  }
 
-    @Override
-    @Transactional(readOnly=true)
-    public boolean existsByEmail(String email) {
-        return userRepository.existsByEmail(email);
-    }
+  @Override
+  @Transactional(readOnly = true)
+  public boolean existsByUsername(String username) {
+    return userRepository.existsByUsername(username);
+  }
 
-    @Override
-    @Transactional
-    public void registerUser(SignupRequest request) {
+  @Override
+  @Transactional(readOnly = true)
+  public boolean existsByEmail(String email) {
+    return userRepository.existsByEmail(email);
+  }
 
-        User user = new User();
-        user.setUsername(request.username());
-        user.setEmail(request.email());
-        user.setFirstName(request.firstName());
-        user.setLastName(request.lastName());
-        user.setPassword(encoder.encode(request.password()));
-        user.getRoles().add(Role.ROLE_USER);
+  @Override
+  @Transactional
+  public void registerUser(SignupRequest request) {
 
-        userRepository.save(user);
-    }
+    User user = new User();
+    user.setUsername(request.username());
+    user.setEmail(request.email());
+    user.setFirstName(request.firstName());
+    user.setLastName(request.lastName());
+    user.setPassword(encoder.encode(request.password()));
+    user.getRoles().add(Role.ROLE_USER);
+
+    userRepository.save(user);
+  }
 }

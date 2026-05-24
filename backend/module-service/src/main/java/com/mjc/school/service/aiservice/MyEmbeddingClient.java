@@ -1,8 +1,8 @@
 package com.mjc.school.service.aiservice;
 
-import com.mjc.school.service.config.properties.GeminiProperties;
 import com.mjc.school.service.aiservice.dto.EmbeddingRequest;
 import com.mjc.school.service.aiservice.dto.EmbeddingResponse;
+import com.mjc.school.service.config.properties.GeminiProperties;
 import com.mjc.school.service.exceptions.AiIntegrationException;
 import java.util.List;
 import org.slf4j.Logger;
@@ -16,47 +16,52 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 public class MyEmbeddingClient {
 
-    private static final Logger log = LoggerFactory.getLogger(MyEmbeddingClient.class);
-    private static final int VECTOR_LENGTH = 768;
+  private static final Logger log = LoggerFactory.getLogger(MyEmbeddingClient.class);
+  private static final int VECTOR_LENGTH = 768;
 
-    private final RestTemplate restTemplate;
-    private final GeminiProperties geminiProperties;
+  private final RestTemplate restTemplate;
+  private final GeminiProperties geminiProperties;
 
-    @Autowired
-    public MyEmbeddingClient(RestTemplate restTemplate, GeminiProperties geminiProperties){
-        this.restTemplate=restTemplate;
-        this.geminiProperties=geminiProperties;
-    }
+  @Autowired
+  public MyEmbeddingClient(RestTemplate restTemplate, GeminiProperties geminiProperties) {
+    this.restTemplate = restTemplate;
+    this.geminiProperties = geminiProperties;
+  }
 
-    public float[] getEmbedding(String text){
-        String url = UriComponentsBuilder.fromHttpUrl(geminiProperties.getEmbeddingModel())
-                        .queryParam("key",geminiProperties.getApiKey()).toUriString();
+  public float[] getEmbedding(String text) {
+    String url =
+        UriComponentsBuilder.fromHttpUrl(geminiProperties.getEmbeddingModel())
+            .queryParam("key", geminiProperties.getApiKey())
+            .toUriString();
 
-        EmbeddingRequest request = EmbeddingRequest.of("models/gemini-embedding-001", text,VECTOR_LENGTH);
+    EmbeddingRequest request =
+        EmbeddingRequest.of("models/gemini-embedding-001", text, VECTOR_LENGTH);
 
-        try{
-            ResponseEntity<EmbeddingResponse> response = restTemplate.postForEntity(url,request,EmbeddingResponse.class);
+    try {
+      ResponseEntity<EmbeddingResponse> response =
+          restTemplate.postForEntity(url, request, EmbeddingResponse.class);
 
-            if(response.getStatusCode().is2xxSuccessful() && response.getBody()!=null){
-                List<Double> values = response.getBody().embedding().values();
+      if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+        List<Double> values = response.getBody().embedding().values();
 
-                if (values.size() != VECTOR_LENGTH) {
-                    log.error("Dimension mismatch, expected {}, but returned {}", VECTOR_LENGTH, values.size());
-                    throw new IllegalStateException("Returned incorrect vector dimensions: " + values.size());
-                }
-
-                float[] vector = new float[VECTOR_LENGTH];
-                for(int i=0;i<VECTOR_LENGTH;i++){
-                    vector[i]=values.get(i).floatValue();
-                }
-                log.info("Successfully retrieved embedding. Dimensions: {}", VECTOR_LENGTH);
-                return vector;
-            }else {
-                throw new AiIntegrationException("Gemini API Error: " + response.getStatusCode());
-            }
-        }catch(Exception e){
-            log.error("Failed to fetch embedding: {}", e.getMessage());
-            throw new AiIntegrationException("Embedding generation failed: " + e.getMessage());
+        if (values.size() != VECTOR_LENGTH) {
+          log.error(
+              "Dimension mismatch, expected {}, but returned {}", VECTOR_LENGTH, values.size());
+          throw new IllegalStateException("Returned incorrect vector dimensions: " + values.size());
         }
+
+        float[] vector = new float[VECTOR_LENGTH];
+        for (int i = 0; i < VECTOR_LENGTH; i++) {
+          vector[i] = values.get(i).floatValue();
+        }
+        log.info("Successfully retrieved embedding. Dimensions: {}", VECTOR_LENGTH);
+        return vector;
+      } else {
+        throw new AiIntegrationException("Gemini API Error: " + response.getStatusCode());
+      }
+    } catch (Exception e) {
+      log.error("Failed to fetch embedding: {}", e.getMessage());
+      throw new AiIntegrationException("Embedding generation failed: " + e.getMessage());
     }
+  }
 }

@@ -1,8 +1,5 @@
 package com.mjc.school.repository.model;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -12,6 +9,9 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.List;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
@@ -19,7 +19,6 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 @Entity
 @Table(name = "authors")
 @EntityListeners(AuditingEntityListener.class)
-
 public class Author implements BaseEntity<Long> {
 
   @Id
@@ -82,5 +81,4 @@ public class Author implements BaseEntity<Long> {
   public void setNews(final List<News> news) {
     this.news = news;
   }
-
 }

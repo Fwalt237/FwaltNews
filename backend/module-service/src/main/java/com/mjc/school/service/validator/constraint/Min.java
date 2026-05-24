@@ -11,5 +11,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Constraint
 public @interface Min {
-    long value();
+  long value();
 }

@@ -6,13 +6,13 @@ import org.springframework.stereotype.Component;
 @Component
 public class MinConstraintChecker implements ConstraintChecker<Min> {
 
-    @Override
-    public boolean check(final Object value, final Min constraint) {
-        return !(value instanceof Number number) || number.longValue() >= constraint.value();
-    }
+  @Override
+  public boolean check(final Object value, final Min constraint) {
+    return !(value instanceof Number number) || number.longValue() >= constraint.value();
+  }
 
-    @Override
-    public Class<Min> getType() {
-        return Min.class;
-    }
+  @Override
+  public Class<Min> getType() {
+    return Min.class;
+  }
 }
