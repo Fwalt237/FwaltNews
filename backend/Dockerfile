@@ -10,6 +10,7 @@ COPY module-web/build.gradle ./module-web/
 RUN chmod +x gradlew
 RUN ./gradlew dependencies --no-daemon
 COPY . .
+RUN chmod +x gradlew
 RUN ./gradlew :module-web:bootJar -x test
 
 FROM eclipse-temurin:17-jre-jammy
