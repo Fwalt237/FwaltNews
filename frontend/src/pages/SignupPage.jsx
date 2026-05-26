@@ -7,6 +7,12 @@ import { FaGithub } from 'react-icons/fa';
 import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
 
 export default function SignupPage() {
+  const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+  const baseUrl = apiUrl.replace(/\/api$/, '');
+
+  const googleLoginUrl = `${baseUrl}/oauth2/authorization/google`;
+  const githubLoginUrl = `${baseUrl}/oauth2/authorization/github`;
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { loading, error, token } = useSelector(s => s.auth);
@@ -115,11 +121,11 @@ export default function SignupPage() {
         </form>
 
         <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <a href="http://localhost:8080/oauth2/authorization/google"
+          <a href={googleLoginUrl}
             className="btn-oauth">
             <FcGoogle size={20} style={{ marginRight: 8 }} /> Sign up with Google
           </a>
-          <a href="http://localhost:8080/oauth2/authorization/github"
+          <a href={githubLoginUrl}
             className="btn-oauth">
             <FaGithub size={20} style={{ marginRight: 8 }} /> Sign up with Github
           </a>
