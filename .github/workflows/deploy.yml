@@ -32,7 +32,9 @@ jobs:
           cache: 'gradle'
 
       - name: Build and Test
-        run: ./gradlew build
+        run: |
+          chmod +x gradlew
+          ./gradlew build
 
       - name: SonarQube Scan
         env:
