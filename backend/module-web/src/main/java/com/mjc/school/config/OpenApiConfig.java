@@ -4,18 +4,23 @@ import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Contact;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
+import io.swagger.v3.oas.models.servers.Server;
 import org.springdoc.core.models.GroupedOpenApi;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class OpenApiConfig {
 
+  @Value("${app.openapi.server-url}")
+  private String serverUrl;
+
   @Bean
   public GroupedOpenApi publicApi() {
     return GroupedOpenApi.builder()
-        .group("news-api")
-        .packagesToScan("mjc.newsApplication.controller")
+        .group("MJC School")
+        .packagesToScan("com.mjc.school")
         .pathsToMatch("/**")
         .build();
   }
@@ -23,6 +28,7 @@ public class OpenApiConfig {
   @Bean
   public OpenAPI newsOpenAPI() {
     return new OpenAPI()
+        .addServersItem(new Server().url(serverUrl))
         .info(
             new Info()
                 .title("FwaltNews Rest API")
