@@ -8,6 +8,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +18,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -36,6 +38,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       JwtUtil jwtUtil, @Qualifier("myUserDetailsService") UserDetailsService userDetailsService) {
     this.jwtUtil = jwtUtil;
     this.userDetailsService = userDetailsService;
+  }
+
+  private static final List<AntPathRequestMatcher> ALLOWED_PATHS =
+      List.of(
+          new AntPathRequestMatcher("/swagger-ui.html"),
+          new AntPathRequestMatcher("/swagger-ui/**"),
+          new AntPathRequestMatcher("/swagger-resources/**"),
+          new AntPathRequestMatcher("/v3/api-docs/**"),
+          new AntPathRequestMatcher("/webjars/**"),
+          new AntPathRequestMatcher("/actuator/**"),
+          new AntPathRequestMatcher("/oauth2/**"),
+          new AntPathRequestMatcher("/api/v*/auth/**"));
+
+  @Override
+  protected boolean shouldNotFilter(HttpServletRequest request) {
+    return ALLOWED_PATHS.stream().anyMatch(matcher -> matcher.matches(request));
   }
 
   @Override

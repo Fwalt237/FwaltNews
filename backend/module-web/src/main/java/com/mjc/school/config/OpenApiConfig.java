@@ -20,7 +20,7 @@ public class OpenApiConfig {
   public GroupedOpenApi publicApi() {
     return GroupedOpenApi.builder()
         .group("MJC School")
-        .packagesToScan("com.mjc.school")
+        .packagesToScan("com.mjc.school.controller.impl")
         .pathsToMatch("/**")
         .build();
   }
