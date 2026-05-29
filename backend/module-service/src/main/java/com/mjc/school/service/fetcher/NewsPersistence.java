@@ -13,6 +13,8 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 @Component
 public class NewsPersistence {
@@ -20,7 +22,6 @@ public class NewsPersistence {
   private final NewsRepository newsRepository;
   private final AuthorRepository authorRepository;
   private final TagRepository tagRepository;
-  private final ArticleScraper scraper;
   private final EmbeddingService embeddingService;
 
   @Autowired
@@ -28,17 +29,15 @@ public class NewsPersistence {
       NewsRepository newsRepository,
       AuthorRepository authorRepository,
       TagRepository tagRepository,
-      ArticleScraper scraper,
       EmbeddingService embeddingService) {
     this.newsRepository = newsRepository;
     this.authorRepository = authorRepository;
     this.tagRepository = tagRepository;
-    this.scraper = scraper;
     this.embeddingService = embeddingService;
   }
 
   @Transactional
-  public void persist(NewsDataItem item) {
+  public void persist(NewsDataItem item, String scrapedBody) {
 
     String finalAuthorName = "Unknown";
     if (item.creator() instanceof List<?> creators && !creators.isEmpty()) {
@@ -76,18 +75,23 @@ public class NewsPersistence {
     }
     news.setTags(tags);
 
-    String body = scraper.scrape(item.link());
-    if (body == null || body.isBlank()) {
-      body =
+    if (scrapedBody == null || scrapedBody.isBlank()) {
+      scrapedBody =
           item.content() != null
               ? item.content()
               : item.description() != null
                   ? item.description()
                   : "No content available for this article.";
     }
-    news.setContent(body);
+    news.setContent(scrapedBody);
 
     News savedNews = newsRepository.save(news);
-    embeddingService.embedNews(savedNews.getId());
+    TransactionSynchronizationManager.registerSynchronization(
+        new TransactionSynchronization() {
+          @Override
+          public void afterCommit() {
+            embeddingService.embedNews(savedNews.getId());
+          }
+        });
   }
 }

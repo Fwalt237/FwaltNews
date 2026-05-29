@@ -5,10 +5,13 @@ import com.mjc.school.repository.airepo.model.NewsEmbeddings;
 import com.mjc.school.repository.impl.NewsRepository;
 import com.mjc.school.repository.model.News;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -23,15 +26,18 @@ public class EmbeddingService {
   private final MyEmbeddingClient embeddingClient;
   private final NewsEmbeddingsRepository newsEmbeddingsRepository;
   private final NewsRepository newsRepository;
+  private final ObjectProvider<EmbeddingService> selfProvider;
 
   @Autowired
   public EmbeddingService(
       MyEmbeddingClient embeddingClient,
       NewsEmbeddingsRepository newsEmbeddingsRepository,
-      NewsRepository newsRepository) {
+      NewsRepository newsRepository,
+      ObjectProvider<EmbeddingService> selfProvider) {
     this.embeddingClient = embeddingClient;
     this.newsEmbeddingsRepository = newsEmbeddingsRepository;
     this.newsRepository = newsRepository;
+    this.selfProvider = selfProvider;
   }
 
   @Async
@@ -56,15 +62,15 @@ public class EmbeddingService {
             });
   }
 
-  @Async
   @Transactional
   @Scheduled(cron = "${news.scheduler.embed-missing}")
+  @SchedulerLock(name = "Embedding_embedMissing", lockAtMostFor = "30m", lockAtLeastFor = "5m")
   public void embedMissing() {
     List<News> missing = newsRepository.findNewsWithoutEmbeddings();
     log.info("Found {} articles missing embeddings. Processing...", missing.size());
 
     for (News news : missing) {
-      this.embedNews(news.getId());
+      Objects.requireNonNull(selfProvider.getIfAvailable()).embedNews(news.getId());
       try {
         Thread.sleep(100);
       } catch (InterruptedException e) {

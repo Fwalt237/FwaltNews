@@ -99,6 +99,10 @@ subprojects {
         testImplementation libs.testcontainers.postgresql
 
         implementation libs.micrometer.registry.prometheus
+
+        implementation libs.shedlock.spring
+        implementation libs.shedlock.provider.jdbc.template
+
     }
 
     configurations {

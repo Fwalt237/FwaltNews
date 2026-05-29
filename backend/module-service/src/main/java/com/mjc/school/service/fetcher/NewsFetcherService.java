@@ -12,6 +12,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.LocalDateTime;
 import java.util.List;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,7 @@ public class NewsFetcherService {
   private final NewsPersistence newsPersistence;
   private final ObjectMapper mapper;
   private final HttpClient httpClient;
+  private final ArticleScraper scraper;
 
   @Autowired
   public NewsFetcherService(
@@ -39,16 +41,19 @@ public class NewsFetcherService {
       NewsPersistence newsPersistence,
       NewsDataApiProperties apiKeyConfig,
       ObjectMapper mapper,
+      ArticleScraper scraper,
       NewsDataApiProperties newsDataApiProperties) {
     this.newsRepository = newsRepository;
     this.newsPersistence = newsPersistence;
     this.apiKeyConfig = apiKeyConfig;
     this.mapper = mapper;
     this.httpClient = HttpClient.newHttpClient();
+    this.scraper = scraper;
     this.newsDataApiProperties = newsDataApiProperties;
   }
 
-  @Scheduled(fixedRateString = "${news.scheduler.fetch-rate-ms}")
+  @Scheduled(cron = "${news.scheduler.fetch-cron}")
+  @SchedulerLock(name = "NewsFetcher_fetchLatestNews", lockAtMostFor = "15m", lockAtLeastFor = "5m")
   public void fetchLatestNews() {
     try {
       List<NewsDataItem> items = callApi();
@@ -61,7 +66,8 @@ public class NewsFetcherService {
         }
 
         try {
-          newsPersistence.persist(item);
+          String scrapedBody = scraper.scrape(item.link());
+          newsPersistence.persist(item, scrapedBody);
           saved++;
         } catch (Exception e) {
           log.error("Couldn't save article '{}':{}", item.title(), e.getMessage());
@@ -77,6 +83,7 @@ public class NewsFetcherService {
   }
 
   @Scheduled(cron = "${news.scheduler.purge-old}")
+  @SchedulerLock(name = "NewsFetcher_purgeOldNews", lockAtMostFor = "5m", lockAtLeastFor = "1m")
   @Transactional
   @CacheEvict(
       value = {"news", "newsPage"},

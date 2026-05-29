@@ -26,6 +26,7 @@ import com.mjc.school.service.fetcher.NewsFetcherService;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import net.javacrumbs.shedlock.core.LockProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.MethodOrderer;
@@ -70,7 +71,11 @@ import org.testcontainers.utility.DockerImageName;
       "spring.jpa.hibernate.ddl-auto=create",
       "spring.flyway.enabled=false",
       "jwt.secret=dummy_test_secret_key_that_is_at_least_256_bits_long_for_hmac",
-      "jwt.expiration=3600000"
+      "jwt.expiration=3600000",
+      "news.scheduler.embed-missing=-",
+      "news.scheduler.purge-old=-",
+      "news.scheduler.fetch-cron=-",
+      "news.scheduler.fetch-rate-ms=-"
     })
 @Testcontainers
 @Transactional
@@ -97,7 +102,7 @@ class AiAssistantServiceTest {
   }
 
   @MockBean private MyEmbeddingClient embeddingClient;
-
+  @MockBean private LockProvider lockProvider;
   @MockBean private NewsFetcherService newsFetcherService;
 
   @Autowired private EmbeddingService embeddingService;
