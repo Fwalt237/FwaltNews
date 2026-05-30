@@ -274,7 +274,7 @@ Additionally, the `@Async` embedding was not actually running asynchronously, an
 
 | Problem                                                      | Solution                                                     |
 | :----------------------------------------------------------- | :----------------------------------------------------------- |
-| Duplicate authors/tags cause “not a unique result” errors    | Added `UNIQUE` constraints on `author.name`, `tag.name`, and `news.title` and cleaned up existing duplicates with a SQL script |
+| Duplicate authors/tags/news cause “not a unique result” errors    | Added `UNIQUE` constraints on `author.name`, `tag.name`, and `news.title` and cleaned up existing duplicates with a SQL script |
 | Scraper held database transactions open for up to 5 seconds  | Moved `scraper.scrape()` out of the `@Transactional` block, scrape first, then save quickly |
 | `@Async` on `embedNews` was bypassed by `this.embedNews()` inside the same class | Injected `ObjectProvider<EmbeddingService>` to call through the Spring proxy, restoring real asynchronous execution |
 | Embedding fired before the database transaction committed, so the new row wasn’t visible yet | Registered a `TransactionSynchronization.afterCommit()` hook to trigger embedding only after the data is safely written |
