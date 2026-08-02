@@ -4,6 +4,12 @@ FwaltNews is a production-grade, highly available full-stack news aggregation pl
 
 This project was architected to demonstrate modern cloud-native engineering practices, including Infrastructure as Code with Terraform, secure multi-tier VPC networking with an application load balancer for fault tolerance, vector-based semantic search using pgvector and Gemini embeddings, hybrid authentication (JWT + OAuth2), automated content ingestion pipelines, and fully automated CI/CD container lifecycle management through GitHub Actions.
 
+Demo:
+
+https://github.com/user-attachments/assets/669c5d09-7b11-4fb6-914b-227fe1a67d2e
+
+
+
 
 
 ## Why this project exists
