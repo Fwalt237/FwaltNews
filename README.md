@@ -4,7 +4,7 @@ FwaltNews is a production-grade, highly available full-stack news aggregation pl
 
 This project was architected to demonstrate modern cloud-native engineering practices, including Infrastructure as Code with Terraform, secure multi-tier VPC networking with an application load balancer for fault tolerance, vector-based semantic search using pgvector and Gemini embeddings, hybrid authentication (JWT + OAuth2), automated content ingestion pipelines, and fully automated CI/CD container lifecycle management through GitHub Actions.
 
-Demo:
+Demo (Unfortunately I had to delete my resources on AWS as it was becoming expensive. That's why I recorded this short demo before going live stop working):
 
 https://github.com/user-attachments/assets/669c5d09-7b11-4fb6-914b-227fe1a67d2e
 
@@ -38,19 +38,11 @@ In the rest of this documentation, I’ll walk you through the atomic compositio
 ## Try it live
 
 |                |                                                              |
-| -------------- | ------------------------------------------------------------ |
-| **Frontend**   | [fwaltnews.com](https://fwaltnews.com)                       |
+| -------------- | ------------------------------------------------------------ |                   |
 | **REST API**   | [api.fwaltnews.com](https://api.fwaltnews.com)               |
 | **Swagger UI** | [api.fwaltnews.com/swagger-ui/index.html](https://api.fwaltnews.com/swagger-ui/index.html) |
 | **CI/CD**      | https://github.com/Fwalt237/FwaltNews/actions                |
 | **SonarCloud** | https://sonarcloud.io/project/overview?id=Fwalt237_FwaltNews |
-
-**Quick demo path:**
-
-1. Go to [fwaltnews.com](https://fwaltnews.com) and sign up
-2. Browse the latest news fetched automatically from NewsData.io
-3. Click the 🧙‍♂️ chat button (bottom right) and ask: *"What's the hottest news this week?"*
-4. Watch the AI search the actual article database and surface relevant stories
 
 
 
